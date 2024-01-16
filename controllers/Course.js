@@ -3,6 +3,8 @@ const Tag = require("../models/tagModel");
 const User = require("../models/userModel");
 const { uploadImageToCloudinary } = require("../utils/imageUploader");
 
+require("dotenv").config();
+
 //createCourse handler function
 exports.createCourse = async (req, res) => {
     try {
