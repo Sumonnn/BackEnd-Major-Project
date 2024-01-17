@@ -47,7 +47,6 @@ exports.updatedProfile = async (req, res) => {
 
 //deleteAccount
 //Explore -> how can we schedule this deletion operation
-
 exports.deleteProfile = async (req, res) => {
     try {
         //get Id 
