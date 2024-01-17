@@ -3,6 +3,8 @@ const OTP = require('../models/otpModel');
 const Profile = require('../models/profileModel');
 const otpGenerator = require('otp-generator');
 const bcrypt = require('bcrypt');
+const mailSender = require("../utils/mailSender");
+const { passwordUpdated } = require('../mail/templates/passwordUpdate');
 const jwt = require('jsonwebtoken');
 
 require('dotenv').config();
