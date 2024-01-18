@@ -109,7 +109,7 @@ exports.signup = async (req, res) => {
                 success: false,
                 message: "OTP not Found"
             })
-        } else if (otp !== recentOTP.otp) {
+        } else if (otp !== recentOTP[0].otp) {
             //Invalid OTP
             return res.status(400).json({
                 success: false,
@@ -118,6 +118,10 @@ exports.signup = async (req, res) => {
         }
         //Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create the user
+        let approved = ""
+        approved === "Instructor" ? (approved = false) : (approved = true)
         //enrty create in DB 
 
         const ProfileDetails = await Profile.create({
@@ -133,6 +137,7 @@ exports.signup = async (req, res) => {
             email,
             contactNumber,
             password: hashedPassword,
+            approved: approved,
             accountType,
             additionalDetails: ProfileDetails._id,
             image: `https://api.dicebear.com/5.x/initials/svg?seed=${firstName} ${lastName}`,
@@ -182,8 +187,9 @@ exports.login = async (req, res) => {
                 accountType: user.accountType,
             }
             const token = jwt.sign(payload, process.env.JWT_SECRET, {
-                expiresIn: "2h",
+                expiresIn: "24h",
             })
+
             user.token = token;
             user.password = undefined;
 
@@ -218,15 +224,63 @@ exports.login = async (req, res) => {
 
 exports.changePassword = async (req, res) => {
     try {
+        //get user data from req.user
+        const userDetails = await User.findById(req.user.id);
         //get data from req body 
-        //get oldPassword , newPassword , confirmNewPassword
+        //get oldPassword , newPassword , confirmNewPassword req body
+        const { oldPassword, newPassword } = req.body;
         //validation
+        const isPasswordMatch = await bcrypt.compare(
+            oldPassword,
+            userDetails.password,
+        )
+        if (isPasswordMatch) {
+            return res.status(401).json({
+                success: false,
+                message: "The password is incorrect",
+            })
+        }
 
         //update pwd in DB
+        const encryptedPassword = await bcrypt.hash(newPassword, 10);
+        const updatedUserDetails = await User.findByIdAndUpdate(
+            req.user.id,
+            { password: encryptedPassword },
+            { new: true },
+        )
+
         //send mail - Password Uppdated 
+        try {
+            const mailResponse = await mailSender(
+                updatedUserDetails.email,
+                "Password for your account has been updated",
+                passwordUpdated(
+                    updatedUserDetails.email,
+                    `Password updated successfully for ${updatedUserDetails.firstName} ${updatedUserDetails.lastName}`,
+                )
+            )
+            console.log("Email sent succesfully : ", mailResponse.response);
+        } catch (error) {
+            console.log("Error occurred while sending email:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Error occured while sending email",
+                error: error.message,
+            })
+        }
         //retrun response
+        return res.status(200).json({
+            success: true,
+            message: "Password updated successfully"
+        })
 
     } catch (error) {
-
+        // If there's an error updating the password, log the error and return a 500 (Internal Server Error) error
+        console.error("Error occurred while updating password:", error)
+        return res.status(500).json({
+            success: false,
+            message: "Error occurred while updating password",
+            error: error.message,
+        })
     }
 }

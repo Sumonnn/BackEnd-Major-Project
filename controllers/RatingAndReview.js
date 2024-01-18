@@ -66,7 +66,6 @@ exports.createRating = async (req, res) => {
     }
 }
 
-
 //getAverageRating
 exports.getAverageRating = async (req, res) => {
     try {
@@ -113,7 +112,6 @@ exports.getAverageRating = async (req, res) => {
         })
     }
 }
-
 
 //getAllRatingAndReviews
 exports.getAllRating = async (req, res) => {
