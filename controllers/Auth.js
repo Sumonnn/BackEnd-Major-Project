@@ -26,6 +26,7 @@ exports.sendOTP = async (req, res) => {
             })
         }
 
+        let result;
         //generate OTP  and check unique otp or not
         do {
             var otp = otpGenerator.generate(6, {
@@ -36,7 +37,7 @@ exports.sendOTP = async (req, res) => {
             console.log("OTP generate: ", otp);
 
             //check unique otp or not
-            const result = await OTP.findOne({ otp: otp });
+            result = await OTP.findOne({ otp: otp });
 
         } while (result);
 
@@ -202,7 +203,7 @@ exports.login = async (req, res) => {
                 success: true,
                 token,
                 user,
-                message: "Logged in successfully", f
+                message: "Logged in successfully",
             })
         } else {
             return res.status(401).json({

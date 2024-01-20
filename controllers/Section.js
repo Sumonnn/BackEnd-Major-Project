@@ -86,7 +86,7 @@ exports.updateSection = async (req, res) => {
 
 exports.deleteSection = async (req, res) => {
     try {
-
+        //fetch Data from req.body
         const { sectionId, courseId } = req.body;
         await Course.findByIdAndUpdate(courseId, {
             $pull: {

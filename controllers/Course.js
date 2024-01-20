@@ -9,21 +9,55 @@ const { convertSecondsToDuration } = require("../utils/secToDuration");
 
 require("dotenv").config();
 
+
 //createCourse handler function
 exports.createCourse = async (req, res) => {
     try {
         //fetch data 
-        const { courseName, courseDescription, whatYouWillLearn, price, tag: _tag, category, status } = req.body;
+        let { courseName, courseDescription, whatYouWillLearn, price, tag: _tag, category, status, instructions: _instructions } = req.body;
 
         //get thumbnail
         const thumbnail = req.files.thumbnailImage;
 
         // Convert the tag and instructions from stringified Array to Array
-        const tag = JSON.parse(_tag)
-        const instructions = JSON.parse(_instructions)
+
+        let tag, instructions;
+
+        try {
+            // Check if _tag is not empty or undefined
+            if (_tag && _tag.trim() !== "") {
+                tag = JSON.parse(_tag);
+            } else {
+                throw new Error("Empty or undefined value for 'tag'.");
+            }
+        } catch (error) {
+            return res.status(400).json({
+                success: false,
+                message: `Error parsing 'tag'. ${error.message}`,
+            });
+        }
+
+        try {
+            // Check if _instructions is not empty or undefined
+            // if (_instructions && _instructions.trim() !== "") {
+            instructions = JSON.parse(_instructions);
+            // } else {
+            //     throw new Error("Empty or undefined value for 'instructions'.");
+            // }
+        } catch (error) {
+            return res.status(400).json({
+                success: false,
+                message: `Error parsing 'instructions'. ${error.message}`,
+            });
+        }
+
+        // const tag = JSON.parse(_tag)
+        // const instructions = JSON.parse(_instructions)
+        // console.log("tag" + tag);
+        // console.log("instructions" + instructions);
 
         //validation
-        if (!courseDescription || !courseName || !whatYouWillLearn || !price || !tag.length || !thumbnail || category || instructions.length) {
+        if (!courseDescription || !courseName || !whatYouWillLearn || !price || !tag.length || !thumbnail || !category) {
             return res.status(400).json({
                 success: false,
                 message: "All fields are required",
@@ -228,13 +262,13 @@ exports.getCourseDetails = async (req, res) => {
                     }
                 }
             )
-            .populate("Category")
+            .populate("category")
             .populate("ratingAndReviews")
             .populate({
                 path: "courseContent",
                 populate: {
                     path: "subSection",
-                    select: "-videoUrl",
+                    // select: "-videoUrl",
                 }
             })
             .exec();
@@ -247,16 +281,17 @@ exports.getCourseDetails = async (req, res) => {
             })
         }
 
-        let totalDurationInSeconds = 0
-        courseDetails.courseContent.forEach((content) => {
-            content.subSection.forEach((subSection) => {
-                const timeDurationInSeconds = parseInt(subSection.timeDuration)
-                totalDurationInSeconds += timeDurationInSeconds
-            })
-        })
+        // =================🛑🛑Error🛑🛑=====================
+        // let totalDurationInSeconds = 0
+        // courseDetails.courseContent.forEach((content) => {
+        //     console.log(content);
+        //     content.subSection.forEach((subSection) => {
+        //         const timeDurationInSeconds = parseInt(subSection.timeDuration)
+        //         totalDurationInSeconds += timeDurationInSeconds
+        //     })
+        // })
 
-        const totalDuration = convertSecondsToDuration(totalDurationInSeconds)
-
+        // const totalDuration = convertSecondsToDuration(totalDurationInSeconds)
 
         //return response
         return res.status(200).json({
@@ -264,7 +299,7 @@ exports.getCourseDetails = async (req, res) => {
             message: "Course Details fetched successfully",
             data: {
                 courseDetails,
-                totalDuration,
+                // totalDuration,
             },
         })
 
